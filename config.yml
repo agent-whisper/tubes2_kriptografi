@@ -1,0 +1,16 @@
+services:
+  - gmail:
+      name: "gmail"
+      version: "v1"
+scopes: 
+  - "https://www.googleapis.com/auth/gmail.readonly"
+client_secret_dir: "instance/credentials.json"
+oauth_config:
+  access_type: "offline"
+  include_granted_scopes: 'true'
+
+app:
+  secret_key: 'replace me'
+  ip: '127.0.0.1'
+  port: '5000'
+
