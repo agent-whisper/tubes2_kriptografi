@@ -12,6 +12,7 @@ google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 google-auth = "*"
 requests = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.6"
