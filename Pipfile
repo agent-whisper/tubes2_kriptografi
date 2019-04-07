@@ -13,6 +13,7 @@ google-auth-oauthlib = "*"
 google-auth = "*"
 requests = "*"
 pyyaml = "*"
+beautifulsoup4 = "*"
 
 [requires]
 python_version = "3.6"
