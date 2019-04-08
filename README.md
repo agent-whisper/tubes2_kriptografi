@@ -1,5 +1,5 @@
 # tubes2_kriptografi
-##Tugas Besar 2: Tanda tangan digital
+## Tugas Besar 2: Tanda tangan digital
 
 How to run:
 1. Install the requirements or create a virtual environment for Python 3
