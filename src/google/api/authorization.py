@@ -80,7 +80,7 @@ def revoke_creds():
             app.logger.debug(msg)
             return msg
         else:
-            msg = '[authorization.revoke_creds] An error occurred.'
+            msg = '[authorization.revoke_creds] An error occurred: %d' % status_code
             app.logger.error(msg)
             return msg
     else:
