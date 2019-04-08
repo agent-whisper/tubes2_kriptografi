@@ -15,13 +15,13 @@ try:
     with open('config.yml', 'r') as stream:
         config = yaml.safe_load(stream)
 except FileNotFoundError:
-    print('[main] Config file not found.')
+    app.logger.error('[main] Config file not found.')
     exit()
 
 try:
     app.secret_key = config['app']['secret_key']
 except KeyError:
-    print('[main] App secret key not found; Check config file.')
+    app.logger.error('[main] App secret key not found; Check config file.')
     exit()
 
 # App routes
@@ -76,7 +76,6 @@ def query_mail(mail_id):
     mail = gmail_api.query_mail(mail_id)
     if mail is not None:
         mail_html, attachments = parse_mail_html(mail_id, mail)
-        print(attachments)
         return mail_html
     else:
         return 'Email was not found'
@@ -91,7 +90,7 @@ def download_attachment(mail_id, attachment_id):
 @app.route('/mails/sent')
 def sent_mail():
     return flask.redirect(flask.url_for('query_outbox'))
-    
+
 @app.route('/mails/outbox/')
 def query_outbox():
     mails = gmail_api.query_mailbox(config['mail_labels']['outbox'], query='kripto')
@@ -118,7 +117,20 @@ def query_labels():
 
 @app.route('/mails/send')
 def send_email():
-    return 'send email'
+    mail_details = {}
+    mail_details['sender'] = flask.session['credentials']['client_id']
+    mail_details['to'] = '13515050@std.stei.itb.ac.id'
+    mail_details['subject'] = 'tubes 2 kripto; test send message'
+    mail_details['text'] = 'test sending message from python script <3'
+    send_response = gmail_api.send_mail(mail_details)
+
+    if send_response is None:
+        return 'Send message failed :('
+    elif 'error' in send_response:
+        return send_response['error']
+    html = 'SEND RESPONSE<br><br>'
+    html += str(send_response)
+    return html
 
 
 @app.route('/cryptography/chill_cipher/encrypt')
@@ -162,9 +174,11 @@ def parse_mail_html(mail_id, mail_obj):
     attachments['items'] = []
     attachment_in_mail_index = []
     idx = 0
+    has_html = False
     for p in mail_obj['parts']:
         try:
             if p['mimeType'] == 'text/html':
+                has_html = True
                 html += str(decode_mail_data(p['body']['data'])) + '<br>'
             elif p['filename'] != '':
                 attachment_in_mail_index.append(idx)
