@@ -57,7 +57,7 @@ def mails():
 @app.route('/mails/inbox/')
 def query_inbox():
     mails = gmail_api.query_mailbox(config['mail_labels']['inbox'], query='kripto')
-    html = 'INBOX <br>'
+    html = 'INBOX <br><br>'
     for m in mails:
         html += 'mail id: ' + m['id'] + '<br>'
         for h in m['payload']['headers']:
@@ -88,13 +88,24 @@ def download_attachment(mail_id, attachment_id):
     html += str(attachment_obj)
     return html
 
+@app.route('/mails/sent')
+def sent_mail():
+    return flask.redirect(flask.url_for('query_outbox'))
+    
 @app.route('/mails/outbox/')
-def outbox():
+def query_outbox():
     mails = gmail_api.query_mailbox(config['mail_labels']['outbox'], query='kripto')
-    html = 'OUTBOX <br>'
+    html = 'OUTBOX <br><br>'
     for m in mails:
-        html += m['id'] + '<br>'
-        html += m['snippet'] + '<br><br>'
+        html += 'mail id: ' + m['id'] + '<br>'
+        for h in m['payload']['headers']:
+            if h['name'] == 'To':
+                html += 'TO: ' + h['value'] + '<br>'
+            elif h['name'] == 'Date':
+                html += 'DATE: ' + h['value'] + '<br>'
+            elif h['name'] == 'Subject':
+                html += 'SUBJECT: ' + h['value'] + '<br>'
+        html += 'SNIPPET: ' + m['snippet'] + '<br><br>'
     return html
 
 @app.route('/mails/labels')
@@ -104,7 +115,7 @@ def query_labels():
     for l in labels:
         html += str(l) + '<br>'
     return html
-    
+
 @app.route('/mails/send')
 def send_email():
     return 'send email'
