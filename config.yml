@@ -9,6 +9,11 @@ oauth_config:
   access_type: "offline"
   include_granted_scopes: 'true'
 
+mail_labels:
+  inbox: 'INBOX'
+  sent: 'SENT'
+  outbox: 'SENT'
+
 app:
   secret_key: 'replace me'
   ip: '127.0.0.1'
