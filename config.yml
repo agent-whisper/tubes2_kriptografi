@@ -4,6 +4,8 @@ services:
       version: "v1"
 scopes: 
   - "https://www.googleapis.com/auth/gmail.readonly"
+  - "https://www.googleapis.com/auth/gmail.send"
+  
 client_secret_dir: "instance/credentials.json"
 oauth_config:
   access_type: "offline"
