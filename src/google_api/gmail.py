@@ -18,17 +18,31 @@ def build_service():
         app.logger.error('[gmail.build_service] Failed building service object')
         return None
 
-def query_mail_ids(query=''):
+def query_labels():
+    service = build_service()
+    if service is None:
+        return []
+    try:
+        response = service.users().labels().list(userId='me').execute()
+        print(response)
+        labels = response['labels']
+        return labels
+    except Exception:
+        msg = ['[gmail.query_labels] Failed to query labels']
+        app.logger.warning(msg)
+        return []
+
+def query_mail_ids(label_ids, query=''):
     mail_ids = []
     service = build_service()
     if service is None:
         return mail_ids
 
     try:
-        response = service.users().messages().list(userId='me', q=query).execute()
+        response = service.users().messages().list(userId='me', labelIds=label_ids, q=query).execute()
         if 'messages' in response:
             mail_ids.extend(response['messages'])
-        
+        # Currently does not process page token to reduce load during development
         # while 'nextPageToken' in response:
         #     page_token = response['nextPageToken']
         #     response = service.users().messages().list(userId='me', q=query, pageToken=page_token).execute()
@@ -39,22 +53,26 @@ def query_mail_ids(query=''):
     app.logger.debug('[gmail.query_inbox] Finished querying mail ids')
     return mail_ids
 
-def query_inbox(query=''):
-    mail_ids = query_mail_ids(query=query)
+def query_mailbox(label_ids, query=''):
+    mail_ids = query_mail_ids(label_ids, query=query)
     service = build_service()
+    if service is None:
+        return []
     mails = []
     try:
         for m_id in mail_ids:
             mail = service.users().messages().get(userId='me', id=m_id['id']).execute()
             mails.append(mail)
     except Exception as error:
-        msg = '[gmail.query_inbox] An error occured: %s' % error
+        msg = '[gmail.mailbox] An error occured: %s' % error
         app.logger.error(msg)
-    app.logger.debug('[gmail.query_inbox] Finished querying inbox')
+    app.logger.debug('[gmail.mailbox] Finished querying inbox')
     return mails
 
 def query_mail(mail_id):
     service = build_service()
+    if service is None:
+        return None
     mail = None
     try:
         mail = service.users().messages().get(userId='me', id=mail_id).execute()
@@ -68,6 +86,8 @@ def query_mail(mail_id):
 
 def query_mail_raw(mail_id):
     service = build_service()
+    if service is None:
+        return None
     mail = None
     try:
         mail = service.users().messages().get(userId='me', id=mail_id, format='raw').execute()
