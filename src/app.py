@@ -52,7 +52,7 @@ def clear_creds():
 
 @app.route('/mails/inbox/')
 def query_inbox():
-    mails = gmail_api.query_inbox(query='kripto')
+    mails = gmail_api.query_mailbox(config['mail_labels']['inbox'], query='kripto')
     html = 'INBOX <br>'
     for m in mails:
         html += m['id'] + '<br>'
@@ -61,15 +61,6 @@ def query_inbox():
 
 @app.route('/mails/inbox/<string:mail_id>')
 def query_mail(mail_id):
-    # mail = gmail_api.query_mail_raw(mail_id)
-    # mail_obj = decode_mail_data(mail['raw'])
-    # if mail_obj.is_multipart():
-    #     for payload in mail_obj.get_payload():
-    #         print(payload.get_payload())
-    # else:
-    #     print(payload.get_payload())
-    # return 'under construction'
-
     mail = gmail_api.query_mail(mail_id)
     attachment_index = []
     if mail is not None:
@@ -101,7 +92,20 @@ def send_email():
 
 @app.route('/mails/outbox/')
 def outbox():
-    return 'outbox'
+    mails = gmail_api.query_mailbox(config['mail_labels']['outbox'], query='kripto')
+    html = 'OUTBOX <br>'
+    for m in mails:
+        html += m['id'] + '<br>'
+        html += m['snippet'] + '<br><br>'
+    return html
+
+@app.route('/mails/labels')
+def query_labels():
+    labels = gmail_api.query_labels()
+    html = 'LABELS<br><br>'
+    for l in labels:
+        html += str(l) + '<br>'
+    return html
 
 @app.route('/cryptography/chill_cipher/encrypt')
 def encrypt():
