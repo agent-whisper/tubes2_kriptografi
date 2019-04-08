@@ -50,45 +50,43 @@ def revoke():
 def clear_creds():
     return auth.clear_creds()
 
+@app.route('/mails/')
+def mails():
+    return flask.redirect(flask.url_for('query_inbox'))
+
 @app.route('/mails/inbox/')
 def query_inbox():
     mails = gmail_api.query_mailbox(config['mail_labels']['inbox'], query='kripto')
     html = 'INBOX <br>'
     for m in mails:
-        html += m['id'] + '<br>'
-        html += m['snippet'] + '<br><br>'
+        html += 'mail id: ' + m['id'] + '<br>'
+        for h in m['payload']['headers']:
+            if h['name'] == 'From':
+                html += 'FROM: ' + h['value'] + '<br>'
+            elif h['name'] == 'Date':
+                html += 'DATE: ' + h['value'] + '<br>'
+            elif h['name'] == 'Subject':
+                html += 'SUBJECT: ' + h['value'] + '<br>'
+        html += 'SNIPPET: ' + m['snippet'] + '<br><br>'
+
     return html
 
-@app.route('/mails/inbox/<string:mail_id>')
+@app.route('/mails/<string:mail_id>')
 def query_mail(mail_id):
     mail = gmail_api.query_mail(mail_id)
-    attachment_index = []
     if mail is not None:
-        html = ''
-        idx = 0
-        for p in mail['parts']:
-            try:
-                if p['mimeType'] == 'text/html':
-                    html += str(decode_mail_data(p['body']['data'])) + '<br>'
-                elif p['filename'] != '':
-                    attachment = gmail_api.get_mail_attachment(mail_id, p['body']['attachmentId'])
-                    p['body']['data'] = convert_b64url_to_b64(attachment['data'])
-                    attachment_index.append(idx)
-            except KeyError:
-                html +=  'no data <br>'
-            idx += 1
-        mail_html = bs(html, 'html.parser')
-        for i in attachment_index:
-            embedded_img = (mail_html.find("img", alt=mail['parts'][i]['filename']))
-            if embedded_img is not None:
-                embedded_img['src'] = 'data:' + mail['parts'][i]['mimeType'] + ';base64,' + mail['parts'][i]['body']['data'].decode()
-        return mail_html.prettify()
+        mail_html, attachments = parse_mail_html(mail_id, mail)
+        print(attachments)
+        return mail_html
     else:
         return 'Email was not found'
 
-@app.route('/mails/send')
-def send_email():
-    return 'send email'
+@app.route('/mails/<string:mail_id>/attachments/<string:attachment_id>')
+def download_attachment(mail_id, attachment_id):
+    attachment_obj = gmail_api.get_mail_attachment(mail_id, attachment_id)
+    html = 'THIS IS AN ATTACHMENT IN BASE64URL<br><br>'
+    html += str(attachment_obj)
+    return html
 
 @app.route('/mails/outbox/')
 def outbox():
@@ -106,6 +104,11 @@ def query_labels():
     for l in labels:
         html += str(l) + '<br>'
     return html
+    
+@app.route('/mails/send')
+def send_email():
+    return 'send email'
+
 
 @app.route('/cryptography/chill_cipher/encrypt')
 def encrypt():
@@ -141,3 +144,33 @@ def create_datastore(msg_id):
 def convert_b64url_to_b64(data):
     data_as_bytes = base64.urlsafe_b64decode(data)
     return base64.standard_b64encode(data_as_bytes)
+
+def parse_mail_html(mail_id, mail_obj):
+    html = ''
+    attachments = {'mail_id': mail_id}
+    attachments['items'] = []
+    attachment_in_mail_index = []
+    idx = 0
+    for p in mail_obj['parts']:
+        try:
+            if p['mimeType'] == 'text/html':
+                html += str(decode_mail_data(p['body']['data'])) + '<br>'
+            elif p['filename'] != '':
+                attachment_in_mail_index.append(idx)
+        except KeyError:
+            html +=  'no data <br>'
+        idx += 1
+    mail_html = bs(html, 'html.parser')
+    for i in attachment_in_mail_index:
+        embedded_img = (mail_html.find("img", alt=mail_obj['parts'][i]['filename']))
+        if embedded_img is not None:
+            attachment = gmail_api.get_mail_attachment(mail_id, mail_obj['parts'][i]['body']['attachmentId'])
+            image_data = convert_b64url_to_b64(attachment['data'])
+            embedded_img['src'] = 'data:' + mail_obj['parts'][i]['mimeType'] + ';base64,' + image_data.decode()
+        else:
+            attachments['items'].append({
+                'name': mail_obj['parts'][i]['filename'],
+                'size': attachment['size'],
+                'id': mail_obj['parts'][i]['body']['attachmentId'],
+            })
+    return mail_html.prettify(), attachments
