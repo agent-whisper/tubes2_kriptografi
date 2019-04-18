@@ -106,7 +106,7 @@ def query_mail_raw(mail_id):
 
 def send_mail(mail_details):
     try:
-        required_param = ['sender', 'to', 'subject', 'text']
+        required_param = ['sender', 'to', 'subject', 'text', 'html']
         for rp in required_param:
             if rp not in mail_details:
                 raise KeyError(rp)
@@ -119,11 +119,13 @@ def send_mail(mail_details):
     to = mail_details['to']
     subject = mail_details['subject']
     msg_text = mail_details['text']
+    msg_html = mail_details['html']
+
     if 'attachments' not in mail_details:
         attachments = None
     else:
         attachments = mail_details['attachments']
-    msg_body = create_message(sender, to, subject, msg_text, attachment_list=attachments)
+    msg_body = create_message(sender, to, subject, msg_text, msg_html, attachment_list=attachments)
 
     service = build_service()
     if service is None:
@@ -161,7 +163,7 @@ def parse_mail_data(data_container, message_obj):
 
 
 # adapted from gmail documentation
-def create_message(sender, to, subject, message_text, attachment_list=None, as_plaintext=False):
+def create_message(sender, to, subject, message_text, message_html, attachment_list=None):
     """Create a message for an email.
 
     Args:
@@ -180,13 +182,12 @@ def create_message(sender, to, subject, message_text, attachment_list=None, as_p
     message['from'] = sender
     message['date'] = formatdate(localtime=True)
     message['subject'] = subject
-
-    if as_plaintext:
-        msg = MIMEText(message_text, 'plain')
-        message.attach(msg)
-    else:
-        msg = MIMEText(message_text, 'html')
-        message.attach(msg)
+    
+    msg = MIMEText(base64.urlsafe_b64encode(message_text.encode()).decode(), 'plain')
+    message.attach(msg)
+    
+    msg = MIMEText(base64.urlsafe_b64encode(message_html.encode()).decode(), 'html')
+    message.attach(msg)
     
     if attachment_list is not None:
         for path in attachment_list:
