@@ -4,7 +4,7 @@ import random
 BLOCK_SIZE_IN_BYTE = 16 # bytes
 BLOCK_SIZE_IN_HEX = BLOCK_SIZE_IN_BYTE*2 # hex
 class Chill:
-  def __init__(self, plain_text_src = 'text', plain_text = '', plain_text_path = '', key = 'key', mode = 'ECB', cipher_text_path = ''):
+  def __init__(self, plain_text_src = 'text', plain_text = '', plain_text_path = '', key = 'key', mode = 'ECB', cipher_text_path = '', cipher_text=''):
     # constructor
     if mode.upper() in ['ECB', 'CBC', 'CFB', 'OFB', 'CTR']: self.mode = mode.upper()
     else:
@@ -32,7 +32,7 @@ class Chill:
       exit(0)
 
     # cipher text related
-    self.cipher_text = ''
+    self.cipher_text = cipher_text
     self.cipher_text_path = cipher_text_path
     # get cipher text from file
     try:
