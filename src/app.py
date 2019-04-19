@@ -1,6 +1,8 @@
 import base64
 import email
 import os
+import json
+import uuid
 
 from bs4 import BeautifulSoup as bs
 import flask
@@ -30,7 +32,7 @@ except KeyError:
 def index():
     if not auth.is_authorized():
         return flask.redirect(flask.url_for('authorize_creds'))
-    return 'index'
+    return flask.redirect(flask.url_for('inbox'))
 
 @app.route('/auth/authorize')
 def authorize_creds():
@@ -51,6 +53,11 @@ def revoke():
 def clear_creds():
     return auth.clear_creds()
 
+@app.route('/logout')
+def logout():
+    clear_creds()
+    return flask.redirect(flask.url_for('index'))
+
 @app.route('/mails/')
 def mails():
     return flask.redirect(flask.url_for('query_inbox'))
@@ -58,25 +65,30 @@ def mails():
 @app.route('/mails/inbox/')
 def query_inbox():
     mails = gmail_api.query_mailbox(config['mail_labels']['inbox'], query='kripto')
-    html = 'INBOX <br><br>'
+    result = []
     for m in mails:
-        html += 'mail id: ' + m['id'] + '<br>'
+        mail = {}
+        mail['mail_id'] = m['id']
         for h in m['payload']['headers']:
-            if h['name'] == 'From':
-                html += 'FROM: ' + h['value'] + '<br>'
-            elif h['name'] == 'Date':
-                html += 'DATE: ' + h['value'] + '<br>'
-            elif h['name'] == 'Subject':
-                html += 'SUBJECT: ' + h['value'] + '<br>'
-        html += 'SNIPPET: ' + m['snippet'] + '<br><br>'
+            if h['name'].lower() == 'from':
+                mail['from'] = h['value']
+            elif h['name'].lower() == 'date':
+                mail['date'] = h['value']
+            elif h['name'].lower() == 'subject':
+                mail['subject'] = h['value']
+        mail['snippet'] = m['snippet']
+        result.append(mail)
 
-    return html
+    return json.dumps({
+        'data': result,
+        'status': 'OK'
+    })
 
 @app.route('/mails/<string:mail_id>')
 def query_mail(mail_id):
     mail = gmail_api.query_mail(mail_id)
     # TODO: read these three from request
-    try_decrypt = True
+    try_decrypt = False
     key = 'ChillKey'
     show = 'text'
 
@@ -92,7 +104,7 @@ def query_mail(mail_id):
         elif show == 'html':
             mail_content = mail_parts['html']
             mail_content = insert_embed_img(mail_id, mail_parts['attachments'], mail_content)
-        return mail_content
+        return str(mail)
     else:
         return 'Email was not found'
         
@@ -110,18 +122,24 @@ def sent_mail():
 @app.route('/mails/outbox/')
 def query_outbox():
     mails = gmail_api.query_mailbox(config['mail_labels']['outbox'], query='kripto')
-    html = 'OUTBOX <br><br>'
+    result = []
     for m in mails:
-        html += 'mail id: ' + m['id'] + '<br>'
+        mail = {}
+        mail['mail_id'] = m['id']
         for h in m['payload']['headers']:
-            if h['name'] == 'To':
-                html += 'TO: ' + h['value'] + '<br>'
-            elif h['name'] == 'Date':
-                html += 'DATE: ' + h['value'] + '<br>'
-            elif h['name'] == 'Subject':
-                html += 'SUBJECT: ' + h['value'] + '<br>'
-        html += 'SNIPPET: ' + m['snippet'] + '<br><br>'
-    return html
+            if h['name'].lower() == 'to':
+                mail['to'] = h['value']
+            elif h['name'].lower() == 'date':
+                mail['date'] = h['value']
+            elif h['name'].lower() == 'subject':
+                mail['subject'] = h['value']
+        mail['snippet'] = m['snippet']
+        result.append(mail)
+
+    return json.dumps({
+        'data': result,
+        'status': 'OK'
+    })
 
 @app.route('/mails/labels')
 def query_labels():
@@ -131,47 +149,63 @@ def query_labels():
         html += str(l) + '<br>'
     return html
 
-@app.route('/mails/send')
+@app.route('/mails/send', methods=['POST'])
 def send_email():
-    # TODO: Fill these two from request
-    use_encryption = True
-    key = 'ChillKey'
-
-    # TODO: Fill the mail details from requests
+    if not auth.is_authorized():
+        return flask.redirect(flask.url_for('authorize_creds'))
+    use_encryption = False if flask.request.form['is_encrypt'] == 'false' else True
+    encryption_key = flask.request.form['encryption_key']
     mail_details = {}
     mail_details['sender'] = flask.session['credentials']['client_id']
-    mail_details['to'] = '13515050@std.stei.itb.ac.id'
-    mail_details['subject'] = 'TUBES 2 KRIPTO - AFTER CIPHER'
-
-    """ Embed images do not show up when viewed from gmail because the image is standard base64 (not base64url) """
-    mail_details['html'] = '<h1>THIS IS A PLACEHOLDER HTML</h1><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAMAAAApB0NrAAAAV1BMVEX///+VyOyByITK4/Wp0vDA48Hr9fvv+PCcy+3Q6tHy+P2Jy4yRz5Oh1qOiz+7f8eDk8fqZ0puw3bKw1vHE4PTQ5/f4/P6p2au44LrI58nX7tjn9ej3/Pfv4affAAAApElEQVR42t2SyQ6DMAwFAyEbCQ103/7/O3vAxiovQVzbuVkaafQkq59BNzPeVpWxYfqacj2wolWNMyvdjpLdWXJm5rlRerWE2ygN5BhxYFMgJ75Z0bgpkRTotoVNhpxEdyelBdcSGUrCkZwblIQs87HETOTcS6XV/IQlIfJ6LK3mD7WSzI9uKXn4PZr/kNJFFchfpZMqMkEJCQZKCJaQ3kvpD/gA5qQFlI8k1AIAAAAASUVORK5CYII=" alt="varvy.com" class=logo width="30" height="30"/>'
-    
-    with open('test_email.txt', 'r') as f:
-        mail_details['text'] = f.read()        
+    mail_details['to'] = flask.request.form['mail_to']
+    mail_details['subject'] = flask.request.form['subject']
+    mail_details['html'] = ''
+    mail_details['text'] = flask.request.form['content']
     # TODO: Sign the mail text
     # give_sign = True
     # if (give_sign):
     #     mail_details['text'] = ecceg.sign(mail_details['text'], key)
     if (use_encryption):
-        mail_details['text'] = encrypt_text(mail_details['text'], key)
+        mail_details['text'] = encrypt_text(mail_details['text'], encryption_key)
     
-    # TODO: Add attachments from client upload
+    # save temp
+    filenames = []
+    try:
+        os.mkdir('temp')
+    except FileExistsError:
+        pass
+    for i in range(0, int(flask.request.form['attachment_count'])):
+        file = flask.request.files['file'+ str(i)]
+        path = os.path.join(os.getcwd(), 'temp/' + str(uuid.uuid4()) + file.filename)
+        filenames.append(path)
+        file.save(path)
+        print('saved')
+
     mail_details['attachments'] = []
-    mail_details['attachments'].append('/home/fariz/Documents/kuliah/semester8/kripto/tubes2_kriptografi/instance/key.png')
-    mail_details['attachments'].append('/home/fariz/Documents/kuliah/semester8/kripto/tubes2_kriptografi/instance/opm.jpeg')
+    for filename in filenames:
+        mail_details['attachments'].append(filename)
+
     send_response = gmail_api.send_mail(mail_details)
-    html = ''
+
+    # delete temp
+    for filename in filenames:
+        if os.path.exists(filename):
+          os.remove(filename)
     
     if send_response is None:
-        return 'Send message failed :('
+        return json.dumps({
+            'msg': 'Send mail failed :(',
+            'status': 'ERROR'
+        })
     elif 'error' in send_response:
-        return send_response['error']
-    html = 'SEND RESPONSE<br><br>'
-    html += str(send_response) + '<br>'
-    
-    html += 'Content:<br>'
-    html += str(mail_details)
-    return html
+        return json.dumps({
+            'msg': send_response['error'],
+            'status': 'ERROR'
+        })
+    return json.dumps({
+        'msg': send_response,
+        'status': 'OK'
+    })
 
 @app.route('/cryptography/chill_cipher/encrypt')
 def encrypt():
@@ -192,6 +226,18 @@ def create_sign():
 @app.route('/signature/ecceg/verify')
 def verify_sign():
     return 'verify_sign'
+
+@app.route('/inbox')
+def inbox():
+    return flask.render_template('inbox.html')
+
+@app.route('/outbox')
+def main():
+    return flask.render_template('sent.html')
+
+@app.route('/compose')
+def compose():
+    return flask.render_template('compose.html')
 
 # Utility functions
 def decode_mail_data(data, double_encoded=False):
