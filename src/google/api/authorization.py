@@ -51,16 +51,19 @@ def authorize(oauth2callback_uri, config):
     return flask.redirect(authorization_url)
 
 def run_oauth2(app_home_uri, oauth2callback_uri, config):
-    flow = create_flow_from_config(oauth2callback_uri, config, use_state=True)
-    if flow is None:
-        err_msg = '[authorization.run_oauth2] Failed to create flow object when requesting access token; Check configuration file.'
-        return err_msg
+    try:
+        flow = create_flow_from_config(oauth2callback_uri, config, use_state=True)
+        if flow is None:
+            err_msg = '[authorization.run_oauth2] Failed to create flow object when requesting access token; Check configuration file.'
+            return err_msg
 
-    authorization_response = flask.request.url
-    flow.fetch_token(authorization_response=authorization_response)
-    flask.session['credentials'] = credentials_to_dict(flow.credentials)
-    app.logger.debug('[authorization.run_oauth2] success generating credentials')
-    return flask.redirect(app_home_uri)
+        authorization_response = flask.request.url
+        flow.fetch_token(authorization_response=authorization_response)
+        flask.session['credentials'] = credentials_to_dict(flow.credentials)
+        app.logger.debug('[authorization.run_oauth2] success generating credentials')
+        return flask.redirect(app_home_uri)
+    except Exception as e:
+        return flask.redirect(flask.url_for('index'))
 
 def revoke_creds():
     if not is_authorized():
@@ -97,7 +100,8 @@ def clear_creds():
     return 'User credentials have been cleared.'
 
 def credentials_to_dict(credentials):
-  return {'token': credentials.token,
+    print(str(credentials))
+    return {'token': credentials.token,
           'refresh_token': credentials.refresh_token,
           'token_uri': credentials.token_uri,
           'client_id': credentials.client_id,

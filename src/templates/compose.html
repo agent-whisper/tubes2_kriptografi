@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Co Mail | Compose</title>
+  <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <!-- Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .header {
+      font-size: 23px !important;
+    }
+    .hamburger {
+      margin-left: 6px !important;
+      margin-right: 0 !important;
+    }
+    .container {
+      margin-top: -6px;
+      width: 100%;
+    }
+    /* label focus color */
+    .input-field input[type=email]:focus + label,
+    .input-field input[type=text]:focus + label,
+    .input-field input[type=number]:focus + label,
+    .input-field textarea:focus + label {
+      color: #ee6e73 !important;
+    }
+    /* label underline focus color */
+    .input-field input[type=email]:focus,
+    .input-field input[type=text]:focus,
+    .input-field input[type=number]:focus,
+    .input-field textarea:focus {
+      border-bottom: 1px solid #ee6e73 !important;
+      box-shadow: 0 0 0 0 #ee6e73 !important;
+    }
+    /* valid color */
+    .input-field input[type=email].valid,
+    .input-field input[type=text].valid,
+    .input-field input[type=number].valid,
+    .input-field textarea.valid {
+      border-bottom: 1px solid #9e9e9e !important;
+      box-shadow: 0 0 0 0 #ee6e73 !important;
+    }
+    /* invalid color */
+    .input-field input[type=email].invalid {
+      box-shadow: 0 0 0 0 #ee6e73 !important;
+    }
+    /* icon prefix focus color */
+    .input-field .prefix {
+      color: #9e9e9e !important;
+    }
+    .input-field .prefix.active {
+      color: #ee6e73 !important;
+    }
+    .collection {
+      border: 0 !important;
+    }
+    .collection-item {
+      padding-bottom: 0 !important;
+    }
+    .file-path-wrapper {
+      padding-left: 3rem !important;
+    }
+    .switch {
+      overflow: auto !important;
+      margin-bottom: 10px !important;
+    }
+    .btn-container {
+      width: 100%;
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    .btn {
+      width: 90% !important;
+      /* background-color:  #ee6e73 !important; */
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar-fixed">
+    <nav>
+      <div class="nav-wrapper">
+        <span class="brand-logo left header">
+          <a href="#" data-target="slide-out" class="sidenav-trigger hamburger">
+            <i class="material-icons">menu</i>
+          </a>
+          Compose
+        </span>
+      </div>
+    </nav>
+  </div>
+  <ul id="slide-out" class="sidenav">
+    <li>
+      <div class="user-view">
+        <div class="background materialize-red lighten-2"></div>
+        <a class="white-text">ardiandiki369@gmail.com</a>
+      </div>
+    </li>
+    <li class="active"><a class="waves-effect" href="/compose"><i class="material-icons">mail</i>Compose</a></li>
+    <li><a class="waves-effect" href="/inbox"><i class="material-icons">archive</i>Inbox</a></li>
+    <li><a class="waves-effect" href="/outbox"><i class="material-icons">unarchive</i>Outbox</a></li>
+    <li><div class="divider"></div></li>
+    <li><a class="waves-effect" href="/logout"><i class="material-icons">close</i>Sign Out</a></li>
+  </ul>
+  <div id="app">
+    <div class="container">
+      <ul class="collection">
+        <li class="collection-item">
+          <div class="input-field">
+            <i class="material-icons prefix">person</i>
+            <input id="mail_to" type="email" class="validate" v-model="mailTo">
+            <label for="mail_to">To</label>
+            <span ref="mailtoMsg" class="helper-text" data-error="wrong email"></span>
+          </div>
+        </li>
+        <li class="collection-item">
+          <div class="input-field">
+            <i class="material-icons prefix">font_download</i>
+            <input id="subject" type="text" class="validate" v-model="subject">
+            <label for="subject">Subject</label>
+          </div>
+          <div class="input-field">
+            <i class="material-icons prefix">mail</i>
+            <textarea id="content" class="materialize-textarea" v-model="content"></textarea>
+            <label for="content">Content</label>
+          </div>
+          <div class="file-field input-field">
+            <div class="attachment-icon">
+              <span></span><i class="material-icons prefix">attachment</i></span>
+              <input type="file" multiple v-on:change="changeAttachment($event)">
+            </div>
+            <div class="file-path-wrapper">
+              <input class="file-path validate" type="text" placeholder="Attachment">
+            </div>
+          </div>
+        </li>
+        <li class="collection-item">
+          <div class="switch">
+            <div class="left">
+              With encryption?       
+            </div>
+            <div class="right">
+              <label>
+                No
+                <input type="checkbox" v-model="isEncrypt">
+                <span class="lever"></span>
+                Yes
+              </label>
+            </div>
+          </div>
+          <div v-if="isEncrypt" class="input-field">
+            <i class="material-icons prefix">vpn_key</i>
+            <input id="encryption-key" type="text" class="validate" v-model="encryptionKey">
+            <label for="encryption-key">Key</label>
+          </div>
+        </li>
+        <li class="collection-item">
+          <div class="switch">
+            <div class="left">
+              Add digital signature?  
+            </div>
+            <div class="right">
+              <label>
+                No
+                <input type="checkbox" v-model="isSign">
+                <span class="lever"></span>
+                Yes
+              </label>
+            </div>
+          </div>
+          <div v-if="isSign" class="switch">
+            <div class="left">
+              Input key method?  
+            </div>
+            <div class="right">
+              <label>
+                Manual
+                <input type="checkbox" v-model="signKeyInputType">
+                <span class="lever"></span>
+                File
+              </label>
+            </div>
+          </div>
+          <div v-if="isSign && !signKeyInputType" class="input-field">
+            <i class="material-icons prefix">vpn_key</i>
+            <input id="sign-key" type="number" class="validate" v-model="signKeyText">
+            <label for="sign-key">Private Key (1-12)</label>
+          </div>
+          <div v-else-if="isSign && signKeyInputType" class="file-field input-field">
+            <div class="attachment-icon">
+              <span></span><i class="material-icons prefix">vpn_key</i></span>
+              <input type="file" v-on:change="changeSignKey($event)">
+            </div>
+            <div class="file-path-wrapper">
+              <input class="file-path validate" type="text" placeholder="Browse File">
+            </div>
+          </div>
+        </li>
+      </ul>
+      <div class="btn-container">
+        <button @click="sendMail" class="btn waves-effect waves-light materialize-red lighten-2">Send</button>
+      </div>
+    </div>
+  </div>
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <!-- Vue JS -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+  <!-- axios -->
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <!-- Script -->
+  <script type=text/javascript src="{{url_for('static', filename='compose.js')}}"></script>
+</body>
+</html>

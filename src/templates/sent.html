@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Co Mail | Outbox</title>
+  <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <!-- Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .header {
+      font-size: 23px !important;
+    }
+    .hamburger {
+      margin-left: 6px !important;
+      margin-right: 0 !important;
+    }
+    .loading-spinner {
+      margin-top: 15px;
+      width: 100%;
+      text-align: center;
+    }
+    .mail-list {
+      display: list-item !important;
+    }
+    .mail-list-container {
+      margin-top: -6px;
+    }
+    .empty-container {
+      margin-top: 25px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar-fixed">
+    <nav>
+      <div class="nav-wrapper">
+        <span class="brand-logo left header">
+          <a href="#" data-target="slide-out" class="sidenav-trigger hamburger">
+            <i class="material-icons">menu</i>
+          </a>
+          Outbox
+        </span>
+      </div>
+    </nav>
+  </div>
+  <ul id="slide-out" class="sidenav">
+    <li>
+      <div class="user-view">
+        <div class="background materialize-red lighten-2"></div>
+        <a class="white-text">ardiandiki369@gmail.com</a>
+      </div>
+    </li>
+    <li><a class="waves-effect" href="/compose"><i class="material-icons">mail</i>Compose</a></li>
+    <li><a class="waves-effect" href="/inbox"><i class="material-icons">archive</i>Inbox</a></li>
+    <li class="active"><a class="waves-effect" href="/outbox"><i class="material-icons">unarchive</i>Outbox</a></li>
+    <li><div class="divider"></div></li>
+    <li><a class="waves-effect" href="/logout"><i class="material-icons">close</i>Sign Out</a></li>
+  </ul>
+  <div id="app">
+    <div class="loading-spinner" v-if="isLoading">
+      <div class="preloader-wrapper small active loading-spinner">
+        <div class="spinner-layer spinner-red-only">
+          <div class="circle-clipper left">
+            <div class="circle"></div>
+          </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="mails.length > 0" class="mail-list-container">
+      <ul class="collection">
+        <li v-for="mail in mails" v-bind:key="mail.id" class="collection-item avatar waves-effect mail-list">
+          <img class="circle" src="{{url_for('static', filename='user.png')}}">
+          <span class="truncate">To: <b>[[ mail.to ]]</b></span>
+          <p class="truncate"><b>[[ mail.subject ]]</b></p>
+          <p class="truncate">[[ mail.date | prettyDate ]]</p>
+        </li>
+      </ul>
+    </div>
+    <div v-else class="empty-container center-align">
+      <span class="grey-text lighten-2">Outbox is empty</span>
+    </div>
+  </div>
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <!-- Vue JS -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+  <!-- axios -->
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <!-- Script -->
+  <script type=text/javascript src="{{url_for('static', filename='sent.js')}}"></script>
+</body>
+</html>
