@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           })
           .catch(() => {
-            // do nothing
+            M.toast({html: 'Failed to send email!'});
           })
         }
     },

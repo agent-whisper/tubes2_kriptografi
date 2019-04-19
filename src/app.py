@@ -2,7 +2,6 @@ import base64
 import email
 import os
 import json
-import uuid
 
 from bs4 import BeautifulSoup as bs
 from src.cryptography.chill_cipher.chill import Chill
@@ -85,38 +84,79 @@ def query_inbox():
         'status': 'OK'
     })
 
+@app.route('/mails/decrypt', methods=['POST'])
+def decrypt_mail():
+    key = flask.request.form['key']
+    content = flask.request.form['content']
+    try:
+        mail_content = decrypt_text(content, key)
+        return json.dumps({
+            'data': mail_content,
+            'status': 'OK'
+        })
+    except Exception as e:
+        return json.dumps({
+            'msg': str(e),
+            'status': 'ERROR'
+        })
+
+@app.route('/mails/verify', methods=['POST'])
+def verify_mail():
+    mode = flask.request.form['mode']
+    if mode == 'file':
+        key = flask.request.file['key']
+    else: # mode == 'text'
+        key = flask.request.form['key']
+    content = flask.request.form['content']
+    try:
+        msg, signature = parse_signature(content)
+        if not signature == '':
+            verified = ecdsa.verify(msg, signature, key, ecdsa.test_curve) # key = 'x,y'
+            return json.dumps({
+                'data': {
+                    signature: signature,
+                    verified: verified
+                },
+                'status': 'OK'
+            })
+
+        return json.dumps({
+            'data': {
+                signature: '',
+                verified: False
+            },
+            'status': 'OK'
+        })
+    except Exception as e:
+        return json.dumps({
+            'msg': str(e),
+            'status': 'ERROR'
+        })
+
 @app.route('/mails/<string:mail_id>')
 def query_mail(mail_id):
     mail = gmail_api.query_mail(mail_id)
-    # TODO: read these three from request
-    try_decrypt = False
-    try_verify = True
-    key = 'ChillKey'
-    show = 'text'
-    pub_point = '7,2'
-    
-    if (try_decrypt and key == ''):
-        return 'Error: No key provided'
     if mail is not None:
         mail_parts = parse_mail(mail_id, mail)
-        if show == 'text':
-            if try_decrypt:
-                mail_content = decrypt_text(mail_parts['text'], key)
-            else:
-                mail_content = mail_parts['text']
-            
-            if try_verify:
-                msg, signature = parse_signature(mail_content)
-                if not signature == '':
-                    verified = ecdsa.verify(msg, signature, pub_point, ecdsa.test_curve)
-
-        elif show == 'html':
-            mail_content = mail_parts['html']
-            mail_content = insert_embed_img(mail_id, mail_parts['attachments'], mail_content)
-        return mail_content
-        # return str(mail)
+        # check signature
+        msg, signature = parse_signature(mail_parts['text'])
+        if signature == '':
+            is_signed = False
+        else:
+            is_signed = True
+        return json.dumps({
+            'data': {
+                'content': mail_parts,
+                'headers': mail['headers'],
+                'is_signed': is_signed
+            },
+            'status': 'OK'
+        })
     else:
-        return 'Email was not found'
+        return json.dumps({
+            'msg': 'Email was not found',
+            'status': 'ERROR'
+        })
         
 @app.route('/mails/<string:mail_id>/attachments/<string:attachment_id>')
 def download_attachment(mail_id, attachment_id):
@@ -191,7 +231,7 @@ def send_email():
         pass
     for i in range(0, int(flask.request.form['attachment_count'])):
         file = flask.request.files['file'+ str(i)]
-        path = os.path.join(os.getcwd(), 'temp/' + str(uuid.uuid4()) + file.filename)
+        path = os.path.join(os.getcwd(), 'temp/' + file.filename)
         filenames.append(path)
         file.save(path)
         print('saved')

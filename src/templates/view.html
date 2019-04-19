@@ -21,6 +21,11 @@
       margin-top: -6px;
       width: 100%;
     }
+    .loading-spinner {
+      margin-top: 15px;
+      width: 100%;
+      text-align: center;
+    }
     /* label focus color */
     .input-field input[type=email]:focus + label,
     .input-field input[type=text]:focus + label,
@@ -60,13 +65,10 @@
     }
     .collection-item {
       padding-bottom: 0 !important;
+      overflow: auto !important;
     }
     .file-path-wrapper {
       padding-left: 3rem !important;
-    }
-    .switch {
-      overflow: auto !important;
-      margin-bottom: 10px !important;
     }
     .btn-container {
       width: 100%;
@@ -78,43 +80,120 @@
       width: 90% !important;
       /* background-color:  #ee6e73 !important; */
     }
+    .heading {
+      padding: 0 !important;
+    }
+    .content {
+      word-wrap: break-word;
+    }
   </style>
 </head>
 <body>
-  <div class="navbar-fixed">
-    <nav>
-      <div class="nav-wrapper">
-        <span class="brand-logo left header">
-          <a href="#" data-target="slide-out" class="sidenav-trigger hamburger">
-            <i class="material-icons">menu</i>
-          </a>
-          Mail
-        </span>
-      </div>
-    </nav>
-  </div>
-  <ul id="slide-out" class="sidenav">
-    <li>
-      <div class="user-view">
-        <div class="background materialize-red lighten-2"></div>
-        <a class="white-text">ardiandiki369@gmail.com</a>
-      </div>
-    </li>
-    <li><a class="waves-effect" href="/compose"><i class="material-icons">mail</i>Compose</a></li>
-    <li :class="from === 'inbox' ? 'active' : ''"><a class="waves-effect" href="/inbox"><i class="material-icons">archive</i>Inbox</a></li>
-    <li :class="from === 'outbox' ? 'active' : ''"><a class="waves-effect" href="/outbox"><i class="material-icons">unarchive</i>Outbox</a></li>
-    <li><div class="divider"></div></li>
-    <li><a class="waves-effect" href="/logout"><i class="material-icons">close</i>Sign Out</a></li>
-  </ul>
   <div id="app">
-    <div class="container">
+    <div class="navbar-fixed">
+      <nav>
+        <div class="nav-wrapper">
+          <span class="brand-logo left header">
+            <a onClick="window.history.back()" class="sidenav-trigger hamburger">
+              <i class="material-icons">arrow_back</i>
+            </a>
+            Mail
+          </span>
+          <ul class="right">
+            <li v-if="isSigned"><a><i class="material-icons modal-trigger" data-target="modal-verify">verified_user</i></a></li>
+            <li><a><i class="material-icons modal-trigger" data-target="modal-decrypt">no_encryption</i></a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <ul id="slide-out" class="sidenav">
+      <li>
+        <div class="user-view">
+          <div class="background materialize-red lighten-2"></div>
+          <a class="white-text">ardiandiki369@gmail.com</a>
+        </div>
+      </li>
+      <li><a class="waves-effect" href="/compose"><i class="material-icons">mail</i>Compose</a></li>
+      <li :class="inboxClass"><a class="waves-effect" href="/inbox"><i class="material-icons">archive</i>Inbox</a></li>
+      <li :class="outboxClass"><a class="waves-effect" href="/outbox"><i class="material-icons">unarchive</i>Outbox</a></li>
+      <li><div class="divider"></div></li>
+      <li><a class="waves-effect" href="/logout"><i class="material-icons">close</i>Sign Out</a></li>
+    </ul>
+    <div id="modal-verify" class="modal">
+      <div class="modal-content">
+        <h5>Verify Signature</h5>
+        <p>Try to verify digital signature. Please input the sender's public key:</p>
+        <div class="input-field">
+          <i class="material-icons prefix">vpn_key</i>
+          <input id="sign-key" type="text" class="validate" v-model="signKeyText" placeholder="Public Key (e.g. '5,7')">
+        </div>
+        <p>or choose a file:</p>
+        <div class="file-field input-field">
+          <div class="attachment-icon">
+            <span></span><i class="material-icons prefix">vpn_key</i></span>
+            <input type="file" v-on:change="changeSignKey($event)">
+          </div>
+          <div class="file-path-wrapper">
+            <input class="file-path validate" type="text" placeholder="Browse File">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a @click="verify" class="modal-close waves-effect btn-flat">Verify Now</a>
+      </div>
+    </div>
+    <div id="modal-decrypt" class="modal">
+      <div class="modal-content">
+        <h5>Decrypt Email</h5>
+        <p>Try to decrypt email content anyway. Please input the key:</p>
+        <div class="input-field">
+          <i class="material-icons prefix">vpn_key</i>
+          <input id="encryption-key" type="text" class="validate" v-model="decryptKey">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a @click="decrypt" class="modal-close waves-effect btn-flat">Decrypt Now</a>
+      </div>
+    </div>
+    <div class="loading-spinner" v-if="isLoading">
+      <div class="preloader-wrapper small active loading-spinner">
+        <div class="spinner-layer spinner-red-only">
+          <div class="circle-clipper left">
+            <div class="circle"></div>
+          </div><div class="gap-patch">
+            <div class="circle"></div>
+          </div><div class="circle-clipper right">
+            <div class="circle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="container">
       <ul class="collection">
         <li class="collection-item">
-          <div class="left">
-            [[ fromOrTo ]]
+          <div class="row">
+            <div class="col s2 heading"><b>[[ fromOrTo ]]</b></div>
+            <div class="col s2"></div>
+            <div class="col s8">[[ fromOrToValue ]]</div>
           </div>
-          <div class="right">
-            
+        </li>
+        <li class="collection-item">
+          <div class="row">
+            <div class="col s2 heading"><b>Date:</b></div>
+            <div class="col s2"></div>
+            <div class="col s8">[[ date | prettyDate ]]</div>
+          </div>
+        </li>
+        <li class="collection-item">
+          <div class="row">
+            <div class="col s2 heading"><b>Subject:</b></div>
+            <div class="col s2"></div>
+            <div class="col s8">[[ subject ]]</div>
+          </div>
+        </li>
+        <li class="collection-item">
+          <div class="content">
+            <p>[[ text ]]</p>
           </div>
         </li>
     </div>

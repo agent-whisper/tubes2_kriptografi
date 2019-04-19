@@ -65,14 +65,14 @@ def verify(message, signature, pub_point, elliptic_curve, base_point=None):
     Qa_is_valid = not elliptic_curve.is_identity(Qa) and elliptic_curve.contains_point(Qa) \
         and EllipticCurveOp.multiply_point(n, Qa, elliptic_curve)
     if not Qa_is_valid:
-        return 'False @ Qa'
+        return False
 
     # Step 1
     sign_point = parse_point(signature)
     r = sign_point.x
     s = sign_point.y
     if (r < 1 or r >= n) or (s < 1 or s >= n):
-        return 'False @ 1'
+        return False
     
     # Step 2
     # TODO: hash message with sha1
@@ -93,7 +93,7 @@ def verify(message, signature, pub_point, elliptic_curve, base_point=None):
     curve_point = EllipticCurveOp.sum_point( EllipticCurveOp.multiply_point(u1, G, elliptic_curve), \
         EllipticCurveOp.multiply_point(u2, Qa, elliptic_curve), elliptic_curve )
     if elliptic_curve.is_identity(curve_point):
-        return 'False @ 6'
+        return False
     
     # Step 7
     return (r % n) == (curve_point.x % n)
