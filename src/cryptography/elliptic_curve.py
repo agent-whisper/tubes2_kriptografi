@@ -50,11 +50,20 @@ class EllipticCurve():
             if (found):
                 break
         return base
+    
+    def is_identity(self, P):
+        P_inv = Point(P.x, -P.y)
+        O = EllipticCurveOp.sum_point(P, P_inv, self)
+        return (EllipticCurveOp.sum_point(P, O, self)) == P
 
 class Point():
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
+    @staticmethod
+    def sum(A, B):
+        return Point( (A.x + B.x), (A.y + B.y) )
+
     def __str__(self):
-        return '(%d, %d)' % (self.x, self.y)
+        return '%d,%d' % (self.x, self.y)
