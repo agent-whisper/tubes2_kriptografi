@@ -90,9 +90,11 @@ def query_mail(mail_id):
     mail = gmail_api.query_mail(mail_id)
     # TODO: read these three from request
     try_decrypt = False
+    try_verify = True
     key = 'ChillKey'
     show = 'text'
-
+    pub_point = '7,2'
+    
     if (try_decrypt and key == ''):
         return 'Error: No key provided'
     if mail is not None:
@@ -102,6 +104,12 @@ def query_mail(mail_id):
                 mail_content = decrypt_text(mail_parts['text'], key)
             else:
                 mail_content = mail_parts['text']
+            
+            if try_verify:
+                msg, signature = parse_signature(mail_content)
+                if not signature == '':
+                    verified = ecdsa.verify(msg, signature, pub_point, ecdsa.test_curve)
+
         elif show == 'html':
             mail_content = mail_parts['html']
             mail_content = insert_embed_img(mail_id, mail_parts['attachments'], mail_content)
@@ -317,4 +325,4 @@ def parse_signature(text_body):
     idx = text_body.find('===---(') + 7
     if idx == -1:
         return ''
-    return text_body[idx:-7]
+    return text_body[:idx], text_body[idx:-7]
