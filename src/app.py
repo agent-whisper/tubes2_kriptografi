@@ -235,6 +235,10 @@ def inbox():
 def main():
     return flask.render_template('sent.html')
 
+@app.route('/view')
+def view():
+    return flask.render_template('view.html')
+
 @app.route('/compose')
 def compose():
     return flask.render_template('compose.html')

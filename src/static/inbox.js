@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
     methods: {
       composeMail() {
         console.log('masuk')
+      },
+      goToView(mail_id) {
+        window.location.href = `/view?id=${mail_id}&from=inbox`;
       }
     },
     delimiters: ['[[',']]']

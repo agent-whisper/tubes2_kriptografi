@@ -75,7 +75,7 @@
     </div>
     <div v-else-if="mails.length > 0" class="mail-list-container">
       <ul class="collection">
-        <li v-for="mail in mails" v-bind:key="mail.id" class="collection-item avatar waves-effect mail-list">
+        <li @click="goToView(mail.mail_id)" v-for="mail in mails" v-bind:key="mail.id" class="collection-item avatar waves-effect mail-list">
           <img class="circle" src="{{url_for('static', filename='user.png')}}">
           <span class="truncate"><b>[[ mail.from ]]</b></span>
           <p class="truncate"><b>[[ mail.subject ]]</b></p>
