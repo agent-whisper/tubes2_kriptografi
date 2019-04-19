@@ -1,12 +1,12 @@
-def modinv(e, m):
-    """ Returns the d that fulfills e*d == 1 (mod p)
+def modinv(a, b):
+    """ Returns x such that (x * a) (mod b) == 1 
     reference: https://stackoverflow.com/questions/4798654/modular-multiplicative-inverse-function-in-python
     """
-    g, x, y = egcd(e, m)
+    g, x, _ = egcd(a, b)
     if g != 1:
         raise Exception('modular inverse does not exist')
     else:
-        return x % m
+        return x % b
 
 def egcd(a, b):
     if a == 0:
