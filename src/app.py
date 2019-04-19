@@ -5,8 +5,9 @@ import json
 import uuid
 
 from bs4 import BeautifulSoup as bs
-import flask
 from src.cryptography.chill_cipher.chill import Chill
+from src.cryptography.digital_sign import ecdsa
+import flask
 import src.google.api.authorization as auth
 import src.google.api.gmail as gmail_api
 import yaml
@@ -104,7 +105,8 @@ def query_mail(mail_id):
         elif show == 'html':
             mail_content = mail_parts['html']
             mail_content = insert_embed_img(mail_id, mail_parts['attachments'], mail_content)
-        return str(mail)
+        return mail_content
+        # return str(mail)
     else:
         return 'Email was not found'
         
@@ -153,18 +155,23 @@ def query_labels():
 def send_email():
     if not auth.is_authorized():
         return flask.redirect(flask.url_for('authorize_creds'))
-    use_encryption = False if flask.request.form['is_encrypt'] == 'false' else True
-    encryption_key = flask.request.form['encryption_key']
     mail_details = {}
     mail_details['sender'] = flask.session['credentials']['client_id']
     mail_details['to'] = flask.request.form['mail_to']
     mail_details['subject'] = flask.request.form['subject']
     mail_details['html'] = ''
     mail_details['text'] = flask.request.form['content']
-    # TODO: Sign the mail text
-    # give_sign = True
-    # if (give_sign):
-    #     mail_details['text'] = ecceg.sign(mail_details['text'], key)
+
+    # TODO: get private key from input / file
+    priv_key = 6
+
+    give_sign = True
+    if (give_sign):
+        mail_details['text'] += '\n'
+        sign = ecdsa.sign(mail_details['text'], priv_key, ecdsa.test_curve)
+        mail_details['text'] += '===---(' + sign + ')---==='
+    use_encryption = False if flask.request.form['is_encrypt'] == 'false' else True
+    encryption_key = flask.request.form['encryption_key']
     if (use_encryption):
         mail_details['text'] = encrypt_text(mail_details['text'], encryption_key)
     
@@ -305,3 +312,9 @@ def decrypt_text(text, key):
 def write_to_file(content, filedir):
     with open(filedir, 'w') as f:
         f.write(content)
+
+def parse_signature(text_body):
+    idx = text_body.find('===---(') + 7
+    if idx == -1:
+        return ''
+    return text_body[idx:-7]
