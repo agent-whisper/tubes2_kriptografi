@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Co Mail | Outbox</title>
+  <title>Co Mail | Digital Signature</title>
   <!-- Compiled and minified CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <!-- Icons -->
@@ -17,19 +17,32 @@
       margin-left: 6px !important;
       margin-right: 0 !important;
     }
-    .loading-spinner {
-      margin-top: 15px;
+    .container {
+      margin-top: -6px;
+      width: 100%;
+    }
+    .collection {
+      border: 0 !important;
+    }
+    .collection-item {
+      padding-bottom: 0 !important;
+    }
+    .btn-container {
       width: 100%;
       text-align: center;
+      margin-top: 30px;
+      margin-bottom: 30px;
     }
-    .mail-list {
-      display: list-item !important;
+    .btn {
+      width: 90% !important;
+      /* background-color:  #ee6e73 !important; */
     }
-    .mail-list-container {
-      margin-top: -6px;
+    .heading {
+      padding: 0 !important;
     }
-    .empty-container {
-      margin-top: 25px;
+    .download-button {
+      color: #ee6e73;
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -41,7 +54,7 @@
           <a href="#" data-target="slide-out" class="sidenav-trigger hamburger">
             <i class="material-icons">menu</i>
           </a>
-          Outbox
+          Compose
         </span>
       </div>
     </nav>
@@ -53,40 +66,41 @@
         <a class="white-text">Welcome to CO Mail</a>
       </div>
     </li>
-    <li><a class="waves-effect" href="/compose"><i class="material-icons">mail</i>Compose</a></li>
+    <li class="active"><a class="waves-effect" href="/compose"><i class="material-icons">mail</i>Compose</a></li>
     <li><a class="waves-effect" href="/inbox"><i class="material-icons">archive</i>Inbox</a></li>
-    <li class="active"><a class="waves-effect" href="/outbox"><i class="material-icons">unarchive</i>Outbox</a></li>
+    <li><a class="waves-effect" href="/outbox"><i class="material-icons">unarchive</i>Outbox</a></li>
     <li><div class="divider"></div></li>
     <li><a class="waves-effect" href="/digital-sign"><i class="material-icons">verified_user</i>Digital Signature</a></li>
     <li><div class="divider"></div></li>
     <li><a class="waves-effect" href="/logout"><i class="material-icons">close</i>Sign Out</a></li>
   </ul>
   <div id="app">
-    <div class="loading-spinner" v-if="isLoading">
-      <div class="preloader-wrapper small active loading-spinner">
-        <div class="spinner-layer spinner-red-only">
-          <div class="circle-clipper left">
-            <div class="circle"></div>
-          </div><div class="gap-patch">
-            <div class="circle"></div>
-          </div><div class="circle-clipper right">
-            <div class="circle"></div>
+    <div class="container">
+      <ul class="collection" v-if="isKeyGenerated">
+        <li class="collection-item">
+          <div class="row">
+            <div class="col s4 heading"><b>Private key</b></div>
+            <div class="col s1"></div>
+            <div class="col s7">
+              <span>[[ keys.private_key ]]</span>
+              <a @click="downloadKey('private')" class="download-button right">Download</a>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-    <div v-else-if="mails.length > 0" class="mail-list-container">
-      <ul class="collection">
-        <li @click="goToView(mail.mail_id)" v-for="mail in mails" v-bind:key="mail.id" class="collection-item avatar waves-effect mail-list">
-          <img class="circle" src="{{url_for('static', filename='user.png')}}">
-          <span class="truncate">To: <b>[[ mail.to ]]</b></span>
-          <p class="truncate"><b>[[ mail.subject ]]</b></p>
-          <p class="truncate">[[ mail.date | prettyDate ]]</p>
+        </li>
+        <li class="collection-item">
+          <div class="row">
+            <div class="col s4 heading"><b>Public key</b></div>
+            <div class="col s1"></div>
+            <div class="col s7">
+              <span>[[ keys.public_key ]]</span>
+              <a @click="downloadKey('public')" class="download-button right">Download</a>
+            </div>
+          </div>
         </li>
       </ul>
-    </div>
-    <div v-else class="empty-container center-align">
-      <span class="grey-text lighten-2">Outbox is empty</span>
+      <div class="btn-container">
+        <button @click="genKey" class="btn waves-effect waves-light materialize-red lighten-2">Generate Key</button>
+      </div>
     </div>
   </div>
   <!-- Compiled and minified JavaScript -->
@@ -96,6 +110,6 @@
   <!-- axios -->
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <!-- Script -->
-  <script type=text/javascript src="{{url_for('static', filename='sent.js')}}"></script>
+  <script type=text/javascript src="{{url_for('static', filename='sign.js')}}"></script>
 </body>
 </html>

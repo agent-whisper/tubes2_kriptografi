@@ -23,13 +23,13 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       fromOrToValue() {
         if (!this.mail) return 'Loading...';
-        return this.fromPage === 'inbox' ? this.mail.headers.From : this.mail.headers.To;
+        return this.fromPage === 'inbox' ? this.mail.headers.From || this.mail.headers.from : this.mail.headers.To || this.mail.headers.to;
       },
       date() {
         return this.mail ? this.mail.headers.Date : 'Loading...';
       },
       subject() {
-        return this.mail ? this.mail.headers.Subject : 'Loading...';
+        return this.mail ? this.mail.headers.Subject || this.mail.headers.subject : 'Loading...';
       },
       text() {
         return this.mail ? this.mail.content.text : 'Loading...';

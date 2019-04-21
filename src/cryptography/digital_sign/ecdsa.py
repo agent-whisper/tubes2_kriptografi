@@ -11,7 +11,7 @@ def generate_keys(elliptic_curve, base_point=None):
     try:
         G, n = initialize(elliptic_curve, base_point=base_point)
     except ValueError as e:
-        return str(e)
+        return False
 
     dA = 0
     while dA == 0:

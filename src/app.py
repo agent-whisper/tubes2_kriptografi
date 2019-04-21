@@ -270,9 +270,23 @@ def encrypt():
 def decrypt():
     return 'decrypt'
 
-@app.route('/signature/ecceg/gen_key')
+@app.route('/signature/gen-key')
 def gen_key():
-    return 'gen_key'
+    keys = ecdsa.generate_keys(ecdsa.test_curve)
+    if keys == False:
+        return json.dumps({
+            'msg': 'Failed to generate key',
+            'status': 'ERROR'
+        })
+    else:
+        priv, pub = keys
+        return json.dumps({
+            'data': {
+                'private_key': priv,
+                'public_key': pub
+            },
+            'status': 'OK'
+        })
 
 @app.route('/signature/ecceg/sign')
 def create_sign():
@@ -297,6 +311,10 @@ def view():
 @app.route('/compose')
 def compose():
     return flask.render_template('compose.html')
+
+@app.route('/digital-sign')
+def digital_sign():
+    return flask.render_template('sign.html')
 
 # Utility functions
 def decode_mail_data(data, double_encoded=False):
