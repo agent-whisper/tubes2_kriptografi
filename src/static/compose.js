@@ -61,6 +61,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const formData = new FormData()
         formData.set('is_encrypt', this.isEncrypt);
+        if (this.isSign && this.signKeyInputType && this.signKeyFile) {
+          formData.append('is_sign', true);
+          formData.append('sign_mode', 'file');
+          formData.append('sign_key', this.signKeyFile);
+        } else if (this.isSign && !this.signKeyInputType && this.signKeyText !== '') {
+          formData.append('is_sign', true);
+          formData.append('sign_mode', 'text');
+          formData.append('sign_key', this.signKeyText);
+        } else {
+          formData.append('is_sign', false);
+        }
         formData.append('encryption_key', this.encryptionKey);
         formData.append('mail_to', this.mailTo);
         formData.append('subject', this.subject);

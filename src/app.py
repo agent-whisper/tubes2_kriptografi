@@ -107,7 +107,6 @@ def verify_mail():
     if mode == 'file':
         key_file = flask.request.files['key']
         key = key_file.read().decode("utf-8")
-        print(key)
     else: # mode == 'text'
         key = flask.request.form['key']
     content = flask.request.form['content']
@@ -217,14 +216,19 @@ def send_email():
     mail_details['text'] = flask.request.form['content']
 
     # TODO: get private key from input / file
-    priv_key = 6
-
-    give_sign = True
+    give_sign = False if flask.request.form['is_sign'] == 'false' else True
     if (give_sign):
+        sign_mode = flask.request.form['sign_mode']
+        if sign_mode == 'file':
+            priv_key_file = flask.request.files['sign_key']
+            priv_key = int(priv_key_file.read().decode("utf-8"))
+        else: # sign_mode == 'text'
+            priv_key = int(flask.request.form['sign_key'])
         mail_details['text'] += '\n'
         sign = ecdsa.sign(mail_details['text'], priv_key, ecdsa.test_curve)
         mail_details['text'] += '===---(' + sign + ')---==='
     use_encryption = False if flask.request.form['is_encrypt'] == 'false' else True
+    
     encryption_key = flask.request.form['encryption_key']
     if (use_encryption):
         mail_details['text'] = encrypt_text(mail_details['text'], encryption_key)
