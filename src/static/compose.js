@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', function() {
         axios({
           method: 'post',
           url: '/mails/send',
-          data: formData
+          data: formData,
+          config: { headers: { 'Content-Type': 'multipart/form-data' } }
         })
           .then((response) => {
             if (response.data.status === 'OK') {

@@ -96,6 +96,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.signKeyText === '' && !this.signKeyFile) {
           M.toast({html: 'Public key cannot be empty!'});
           return;
+        } else if (!this.signKeyFile && this.signKeyText !== '') {
+          signKeyAsArray = this.signKeyText.split(',');
+          if (signKeyAsArray.length !== 2
+            || parseInt(signKeyAsArray[0]) <= 0
+            || parseInt(signKeyAsArray[1]) >= 13) {
+              M.toast({html: 'Public key\'s format is wrong!'});
+              return;
+          }
         }
         const formData = new FormData()
         if (this.signKeyFile) {
@@ -109,7 +117,8 @@ document.addEventListener('DOMContentLoaded', function() {
         axios({
           method: 'post',
           url: '/mails/verify',
-          data: formData
+          data: formData,
+          config: { headers: { 'Content-Type': 'multipart/form-data' } }
         })
           .then((response) => {
             if (response.data.status === 'OK') {
@@ -129,6 +138,24 @@ document.addEventListener('DOMContentLoaded', function() {
           })
         this.signKeyText = '';
       },
+      downloadAttachment(id, mimeType, filename) {
+        axios.get(`/mails/${this.mail.content.mail_id}/attachments/${id}?filename=${filename}&mime=${mimeType}`)
+          .then((response) => {
+            // let blob = new Blob([response.data], { type: mimeType });
+            // let link = document.createElement('a');
+            // link.href = window.URL.createObjectURL(blob);
+            // link.download = filename;
+            // link.click();
+            // if (response.data.status === 'OK') {
+            // } else {
+            //   M.toast({html: 'Failed to download attachment!'});
+            // }
+          })
+          .catch((error) => {
+            console.log(error);
+            M.toast({html: 'Failed to download attachment!'});
+          })
+      }
     },
     delimiters: ['[[',']]']
   })

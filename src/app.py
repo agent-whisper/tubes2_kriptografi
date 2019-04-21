@@ -2,6 +2,7 @@ import base64
 import email
 import os
 import json
+import uuid
 
 from bs4 import BeautifulSoup as bs
 from src.cryptography.chill_cipher.chill import Chill
@@ -104,7 +105,9 @@ def decrypt_mail():
 def verify_mail():
     mode = flask.request.form['mode']
     if mode == 'file':
-        key = flask.request.file['key']
+        key_file = flask.request.files['key']
+        key = key_file.read().decode("utf-8")
+        print(key)
     else: # mode == 'text'
         key = flask.request.form['key']
     content = flask.request.form['content']
@@ -161,9 +164,12 @@ def query_mail(mail_id):
 @app.route('/mails/<string:mail_id>/attachments/<string:attachment_id>')
 def download_attachment(mail_id, attachment_id):
     attachment_obj = gmail_api.get_mail_attachment(mail_id, attachment_id)
-    html = 'THIS IS AN ATTACHMENT IN BASE64URL<br><br>'
-    html += str(attachment_obj)
-    return html
+    decoded_attachment_obj = base64.urlsafe_b64decode(attachment_obj['data'])
+    filename = flask.request.args.get('filename')
+    path = os.path.join(os.getcwd(), 'temp/' + str(uuid.uuid4()) + '##' + filename)
+    with open(path, 'wb') as f:
+        f.write(decoded_attachment_obj)
+    return 'OK'
 
 @app.route('/mails/sent/')
 def sent_mail():
@@ -287,14 +293,6 @@ def gen_key():
             },
             'status': 'OK'
         })
-
-@app.route('/signature/ecceg/sign')
-def create_sign():
-    return 'create_sign'
-
-@app.route('/signature/ecceg/verify')
-def verify_sign():
-    return 'verify_sign'
 
 @app.route('/inbox')
 def inbox():

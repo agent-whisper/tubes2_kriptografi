@@ -86,6 +86,10 @@
     .content {
       word-wrap: break-word;
     }
+    .attachment {
+      color: #ee6e73;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -189,6 +193,17 @@
             <div class="col s2 heading"><b>Subject:</b></div>
             <div class="col s2"></div>
             <div class="col s8">[[ subject ]]</div>
+          </div>
+        </li>
+        <li class="collection-item">
+          <div class="row">
+            <div class="col s2 heading"><b>Attachments:</b></div>
+            <div class="col s2"></div>
+            <div class="col s8">
+              <span @click="downloadAttachment(att.id, att.type, att.name)" class="attachment" v-for="att in mail.content.attachments">
+                [[ att.name ]] ([[ att.size ]] bytes)   
+              </span>
+            </div>
           </div>
         </li>
         <li class="collection-item">
