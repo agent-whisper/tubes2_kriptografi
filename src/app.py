@@ -87,27 +87,26 @@ def query_inbox():
 
 @app.route('/mails/decrypt', methods=['POST'])
 def decrypt_mail():
+    mail_id = flask.request.form['mail_id']
     key = flask.request.form['key']
-    mailAsJSON = query_mail(flask.request.form['mail_id'])
-    mailAsDict = json.loads(mailAsJSON)
-    content = ''
-    if (mailAsDict['status'] == 'OK'):
-        content = mailAsDict['data']['content']['text']
+    mail = gmail_api.query_mail(mail_id)
+
+    if mail is not None:
+        mail_parts = parse_mail(mail_id, mail)
+        try:
+            mail_content = decrypt_text(mail_parts['text'], key)
+            return json.dumps({
+                'data': mail_content.replace('\n', '\\\\n'),
+                'status': 'OK'
+            })
+        except Exception as e:
+            return json.dumps({
+                'msg': str(e),
+                'status': 'ERROR'
+            })
     else:
         return json.dumps({
-            'msg': 'Failed to decrypt!',
-            'status': 'ERROR'
-        })
-    try:
-        write_to_file(content,'decrypt_dec')
-        mail_content = decrypt_text(content, key)
-        return json.dumps({
-            'data': mail_content,
-            'status': 'OK'
-        })
-    except Exception as e:
-        return json.dumps({
-            'msg': str(e),
+            'msg': 'Email was not found',
             'status': 'ERROR'
         })
 
@@ -157,6 +156,7 @@ def query_mail(mail_id):
             is_signed = False
         else:
             is_signed = True
+        mail_parts['text'] = mail_parts['text'].replace('\n', '\\\\n')
         j = json.dumps({
             'data': {
                 'content': mail_parts,

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return this.mail ? this.mail.headers.Subject || this.mail.headers.subject : 'Loading...';
       },
       text() {
-        return this.mail ? this.mail.content.text : 'Loading...';
+        return this.mail ? this.mail.content.text.replace(/\\\\n/g, '<br \>') : 'Loading...';
       },
       isSigned() {
         return this.mail ? this.mail.is_signed : false;
