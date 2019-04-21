@@ -105,7 +105,7 @@ def decrypt_mail():
             'data': mail_content,
             'status': 'OK'
         })
-    except ValueError as e:
+    except Exception as e:
         return json.dumps({
             'msg': str(e),
             'status': 'ERROR'
