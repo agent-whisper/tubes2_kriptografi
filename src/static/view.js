@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const formData = new FormData()
         formData.set('key', this.decryptKey);
-        formData.append('content', this.mail.content.text);
+        formData.append('mail_id', this.mail.content.mail_id);
         axios({
           method: 'post',
           url: '/mails/decrypt',
