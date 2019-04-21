@@ -34,21 +34,34 @@ di main -> str(p[i])
 """========================================================"""
 
 # NEW TEST
-pt = ''
-with open('test_email.txt', 'r') as f:
-	for l in f.readlines():
-		pt += l
+pt = """Kepada Yth.
+Bapak Dekan 
+Di Tempat
+
+Dengan hormat.
+Bersama  surat  ini  saya  ingin  mengabarkan  bahwa  nilai  skripsi  mahasiswa  yang  bernama Faisal  Saleh  dengan  NIM  13902021 adalah 86,5 atau dalam nilai indeks A. Sidang skripsi sudah dilakukan pada Hari Rabu Tanggal 21 Januari 20 Juli 2005.
+
+Atas perhatian Bapak saya ucapkan terima kasih.
+
+Bandung, 25 Juli 2005
+
+Dosen Pembimbing Skripsi
+Ir. Ahmad Agus
+"""
+# with open('test_email.txt', 'r') as f:
+# 	for l in f.readlines():
+# 		pt += l
 ch2 = Chill(
 	plain_text=pt,
-	key='ChillKey',
+	key='diki',
 	cipher_text_path='aaaa.txt',
 )
 ch2.encrypt()
 print('plain text before:\n', ch2.plain_text)
 print('\ncipher text:\n', ch2.cipher_text)
-print(len(ch2.cipher_text))
 ch2.decrypt()
 print('\nplain text after:\n', ch2.plain_text)
+print('\nciphertext after:\n', ch2.cipher_text)
 print(len(ch2.plain_text))
 
 def generate_cipher_text(plain_text, key, mode='CTR'):
