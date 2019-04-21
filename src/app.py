@@ -116,8 +116,8 @@ def verify_mail():
             verified = ecdsa.verify(msg, signature, key, ecdsa.test_curve) # key = 'x,y'
             return json.dumps({
                 'data': {
-                    signature: signature,
-                    verified: verified
+                    'signature': signature,
+                    'verified': verified
                 },
                 'status': 'OK'
             })
@@ -224,7 +224,7 @@ def send_email():
             priv_key = int(priv_key_file.read().decode("utf-8"))
         else: # sign_mode == 'text'
             priv_key = int(flask.request.form['sign_key'])
-        mail_details['text'] += '\n'
+        # mail_details['text'] += '\n'
         sign = ecdsa.sign(mail_details['text'], priv_key, ecdsa.test_curve)
         mail_details['text'] += '===---(' + sign + ')---==='
     use_encryption = False if flask.request.form['is_encrypt'] == 'false' else True
@@ -244,7 +244,6 @@ def send_email():
         path = os.path.join(os.getcwd(), 'temp/' + file.filename)
         filenames.append(path)
         file.save(path)
-        print('saved')
 
     mail_details['attachments'] = []
     for filename in filenames:
@@ -389,4 +388,4 @@ def parse_signature(text_body):
     idx = text_body.find('===---(') + 7
     if idx == -1:
         return ''
-    return text_body[:idx], text_body[idx:-7]
+    return text_body[:idx-7], text_body[idx:-7]

@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
               if (response.data.data.verified) {
                 toastText += 'Sender is verified!'
               } else {
-                toastText += 'Sender is NOT verified!'
+                toastText += 'Sender is NOT verified or wrong public key!'
               }
               M.toast({html: toastText});
             } else if (response.data.status === 'ERROR') {
