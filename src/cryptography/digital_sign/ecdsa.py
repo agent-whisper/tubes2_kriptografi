@@ -1,6 +1,7 @@
 import hashlib
 import secrets
 
+from src.cryptography.sha import sha1
 from src.utilities.matdis.mod_op import modinv
 from src.utilities.matdis.prime_op import is_prime
 from src.cryptography.elliptic_curve import EllipticCurve, EllipticCurveOp, Point
@@ -126,12 +127,9 @@ def parse_point(pub_point):
         return None
 
 def gen_digest(message):
-    sha1 = hashlib.sha1()
-    if hasattr(message, 'encode'):
-        message = message.encode()
-    sha1.update(message)
-    return sha1.digest()
+    if hasattr(message, 'decode'):
+        message = message.decode()
+    return sha1(message)
 
 def conv_digest_to_int(digest):
-    hex_string = digest.hex()
-    return int(hex_string, 16)
+    return int(digest, 16)
