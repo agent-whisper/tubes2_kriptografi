@@ -26,3 +26,5 @@ If planning to deploy:
 7. Make sure the ip and port is accessible from outside.
 
 8. Run the server with ```python3 run.py```
+
+Note: requires instance/app_credentials.json (from google developer console; not included) for google authentication.
