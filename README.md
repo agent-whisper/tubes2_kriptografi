@@ -5,6 +5,8 @@
 - M. Treza Norlandra / 13515080
 - Diki Ardian Wirasandi / 13515092
 
+*NOTES: We are using urllib3 for testing purposes. Remove it if not required anymore*
+
 How to run:
 1. Install the requirements or create a virtual environment for Python 3
 2. Create client secret for authorization from OAuth 2.0.
