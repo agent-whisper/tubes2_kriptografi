@@ -5,7 +5,10 @@
 - M. Treza Norlandra / 13515080
 - Diki Ardian Wirasandi / 13515092
 
-*NOTES: We are using urllib3 for testing purposes. Remove it if not required anymore*
+*NOTES:*
+
+- We are using urllib3 for testing purposes. Remove it if not required anymore
+- To reduce inbox/outbox query load during testing, the client will filter email with 'kripto' in subject
 
 How to run:
 1. Install the requirements or create a virtual environment for Python 3
